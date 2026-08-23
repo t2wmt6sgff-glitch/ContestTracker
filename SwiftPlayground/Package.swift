@@ -16,7 +16,7 @@ let package = Package(
         .iOSApplication(
             name: "Contest Tracker",
             targets: ["AppModule"],
-            displayVersion: "0.3.03",
+            displayVersion: "0.3",
             bundleVersion: "1",
             appIcon: .placeholder(icon: .note),
             accentColor: .presetColor(.brown),

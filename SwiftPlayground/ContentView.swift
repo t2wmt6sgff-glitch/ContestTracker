@@ -350,23 +350,45 @@ struct ContestsView: View {
     
     // MARK: - Archived
     
-    private func isArchived(
-        _ contest: Contest
-    ) -> Bool {
-        let contestID = String(
+    private func persistentIdentifierString(
+        for contest: Contest
+    ) -> String {
+        let description = String(
             describing: contest.persistentModelID
         )
         
+        guard
+            let start = description.firstIndex(of: "<"),
+            let end = description[start...].firstIndex(of: ">")
+        else {
+            return description
+        }
+        
+        return String(
+            description[
+                description.index(after: start)..<end
+            ]
+        )
+    }
+    
+    private func isArchived(
+        _ contest: Contest
+    ) -> Bool {
+        let contestID = persistentIdentifierString(
+            for: contest
+        )
+        
         return archivedContests.contains { archive in
-            archive.contestID == contestID
+            archive.contestID == contestID ||
+            archive.contestID.contains("<\(contestID)>")
         }
     }
     
     private func archive(
         _ contest: Contest
     ) {
-        let contestID = String(
-            describing: contest.persistentModelID
+        let contestID = persistentIdentifierString(
+            for: contest
         )
         
         let archive = ContestArchive(
@@ -575,15 +597,37 @@ struct ArchivedContestsView: View {
     
     // MARK: - Archived Check
     
-    private func isArchived(
-        _ contest: Contest
-    ) -> Bool {
-        let contestID = String(
+    private func persistentIdentifierString(
+        for contest: Contest
+    ) -> String {
+        let description = String(
             describing: contest.persistentModelID
         )
         
+        guard
+            let start = description.firstIndex(of: "<"),
+            let end = description[start...].firstIndex(of: ">")
+        else {
+            return description
+        }
+        
+        return String(
+            description[
+                description.index(after: start)..<end
+            ]
+        )
+    }
+    
+    private func isArchived(
+        _ contest: Contest
+    ) -> Bool {
+        let contestID = persistentIdentifierString(
+            for: contest
+        )
+        
         return archivedContests.contains { archive in
-            archive.contestID == contestID
+            archive.contestID == contestID ||
+            archive.contestID.contains("<\(contestID)>")
         }
     }
     
@@ -592,12 +636,15 @@ struct ArchivedContestsView: View {
     private func recover(
         _ contest: Contest
     ) {
-        let contestID = String(
-            describing: contest.persistentModelID
+        let contestID = persistentIdentifierString(
+            for: contest
         )
         
         if let archive = archivedContests.first(
-            where: { $0.contestID == contestID }
+            where: {
+                $0.contestID == contestID ||
+                $0.contestID.contains("<\(contestID)>")
+            }
         ) {
             modelContext.delete(archive)
         }
@@ -610,12 +657,15 @@ struct ArchivedContestsView: View {
     private func delete(
         _ contest: Contest
     ) {
-        let contestID = String(
-            describing: contest.persistentModelID
+        let contestID = persistentIdentifierString(
+            for: contest
         )
         
         if let archive = archivedContests.first(
-            where: { $0.contestID == contestID }
+            where: {
+                $0.contestID == contestID ||
+                $0.contestID.contains("<\(contestID)>")
+            }
         ) {
             modelContext.delete(archive)
         }

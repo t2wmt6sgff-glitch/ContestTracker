@@ -653,6 +653,12 @@ struct ArchivedContestsView: View {
             }
         ) {
             modelContext.delete(archive)
+            
+            do {
+                try modelContext.save()
+            } catch {
+                print("Error guardando la recuperación: \(error)")
+            }
         }
         
         contestToRecover = nil

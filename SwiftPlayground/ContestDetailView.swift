@@ -200,10 +200,12 @@ struct ContestDetailView: View {
                 newPhaseName = ""
                 showingAddPhase = true
             } label: {
-                Label(
-                    "Añadir fase",
-                    systemImage: "plus"
-                )
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                    
+                    Text("Añadir fase")
+                }
+                .frame(minWidth: 120)
             }
             .buttonStyle(.borderedProminent)
         }

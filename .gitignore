@@ -1,0 +1,68 @@
+# ============================================================
+# Contest Tracker
+# Git ignore
+# ============================================================
+
+# ------------------------------------------------------------
+# macOS
+# ------------------------------------------------------------
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Finder metadata
+._*
+
+# ------------------------------------------------------------
+# Xcode
+# ------------------------------------------------------------
+
+# Xcode user-specific settings
+xcuserdata/
+
+# Xcode build products
+DerivedData/
+build/
+
+# Archives
+*.xcarchive
+
+# Xcode project user state
+*.xcuserstate
+
+# Swift Package Manager
+# Package.resolved is intentionally NOT ignored because it
+# can be useful for reproducible builds.
+.build/
+
+# SwiftPM workspace state
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+
+# ------------------------------------------------------------
+# Swift Playgrounds
+# ------------------------------------------------------------
+
+# Generated Playground build data
+.playground/
+
+# Temporary Playground data
+.playgroundbook/
+
+# ------------------------------------------------------------
+# Swift / compiler generated files
+# ------------------------------------------------------------
+
+*.dSYM
+*.dSYM.zip
+
+# ------------------------------------------------------------
+# Temporary / backup files
+# ------------------------------------------------------------
+
+*.tmp
+*.temp
+*.swp
+*.swo
+
+*~

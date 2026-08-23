@@ -397,6 +397,12 @@ struct ContestsView: View {
         
         modelContext.insert(archive)
         
+        do {
+            try modelContext.save()
+        } catch {
+            print("Error guardando el archivado: \(error)")
+        }
+        
         contestToArchive = nil
     }
     

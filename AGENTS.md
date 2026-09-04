@@ -1,44 +1,34 @@
 # AGENTS.md
 
-## Mission
+## Alcance
 
-Build ContestTracker as a reliable, local-first product for pianists who prepare competitions. The native SwiftUI app and the future web app should share product concepts and user experience, but they do not have to share implementation code.
+Este archivo contiene únicamente reglas técnicas para Codex. No sustituye las instrucciones, la memoria, las fuentes ni las decisiones de producto del proyecto histórico de ChatGPT «ContestTracker».
 
-## Current constraints
+Cuando falte contexto de producto, no lo inventes: consulta `docs/CONTESTTRACKER_CONTEXT.md` si existe o pide un brief procedente del proyecto histórico.
 
-- The native app lives in `SwiftPlayground/` as a Swift Playgrounds `.swiftpm` application.
-- Keep the deployment target at iPadOS 17.6 unless a reviewed decision changes it.
-- The project must remain usable without an account or network connection for its core contest, phase, work, and repertoire workflows.
-- Xcode 16.2 on the available Mac is the final native build environment. Windows and cloud agents may edit and review Swift, but cannot claim a native build passed unless it was actually verified on a compatible Mac or in Swift Playgrounds.
-- Public distribution of the product should be led by the future web/PWA experience. An IPA in GitHub is a development artifact, not a substitute for normal App Store distribution or signing.
-- Do not edit `SwiftPlayground/Package.swift` by hand; Swift Playgrounds marks it as generated.
+## Proyecto nativo
 
-## How to work
+- El código de la aplicación está en `SwiftPlayground/` y conserva la estructura generada por Swift Playgrounds.
+- `SwiftPlayground/Package.swift` se genera automáticamente; no lo edites manualmente.
+- El deployment target mínimo es iPadOS 17.6.
+- Los entornos nativos disponibles son Swift Playgrounds en iPad y Xcode 16.2 en el Mac.
+- Windows y los agentes sin herramientas de Apple pueden inspeccionar y editar el código, pero no deben afirmar que la app compila o se ejecuta.
 
-1. Read `README.md`, `CONTRIBUTING.md`, and relevant files before changing code.
-2. Keep each task and pull request focused on one outcome.
-3. Preserve a working state. Avoid broad rewrites unless an accepted decision record justifies one.
-4. Prefer Apple frameworks and simple solutions. Add a dependency only with a written reason covering maintenance, license, compatibility, and size.
-5. Treat every SwiftData model or relationship change as high risk. Explain migration impact and verify persistence after relaunch.
-6. For calendar and reminders, first evaluate local Apple integrations such as EventKit and UserNotifications. A backend is not the default.
-7. Never add secrets, signing certificates, provisioning profiles, private user data, or API keys to the repository.
-8. Record durable product or architecture decisions in `docs/DECISIONS.md`.
-9. Update `docs/ROADMAP.md` only when priorities or completion state genuinely change.
-10. Write user-facing copy and project documentation in Spanish unless the task requests another language. Code identifiers stay in conventional English.
+## Forma de trabajar
 
-## Definition of done
+- Lee `README.md`, `CONTRIBUTING.md` y los archivos afectados antes de modificar código.
+- Mantén cada cambio técnico limitado a un solo resultado comprobable.
+- Evita reescrituras amplias y dependencias nuevas salvo necesidad demostrada.
+- No conviertas riesgos detectados por inspección en errores confirmados sin reproducirlos.
+- Informa por separado de la inspección estática, la compilación, la ejecución en simulador y la prueba en dispositivo.
+- No añadas certificados, perfiles de aprovisionamiento, claves, datos privados ni archivos de firma al repositorio.
 
-A change is done only when:
+## SwiftData
 
-- The requested behavior is implemented and the relevant edge cases were considered.
-- Existing data is preserved, or migration/reset consequences are explicitly documented.
-- Accessibility and iPad layouts were considered for UI changes.
-- Verification is reported honestly: distinguish code review, static inspection, Swift Playgrounds run, simulator run, and physical-device run.
-- Documentation is updated when behavior, constraints, or decisions changed.
-- The pull request explains what changed, why, how it was verified, and whether persistence is affected.
+- Antes de modificar un `@Model`, una relación o el `ModelContainer`, analiza la compatibilidad con datos existentes y la posible necesidad de migración.
+- Los cambios de persistencia deben probarse creando o modificando datos, cerrando completamente la app, volviéndola a abrir y comprobando el resultado.
+- No cambies modelos como parte colateral de una tarea de interfaz.
 
-## Product boundaries
+## Pull requests
 
-- Do not introduce accounts, sync, or a backend until a concrete user story requires them and a decision record defines data ownership, privacy, offline behavior, cost, and failure recovery.
-- Do not make the future website a pixel-for-pixel port of the iPad UI. Preserve the same domain model and brand while designing for the web.
-- Do not make App Store publication a prerequisite for useful progress. The native app can remain a personal/test distribution while the web becomes the public product.
+Explica qué cambia, por qué, cómo se verificó y si afecta a persistencia o datos existentes. No mezcles funcionalidades independientes.

@@ -15,7 +15,6 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Type-check iPad app sources
-      working-directory: ContestTracker.swiftpm
       shell: bash
       run: |
         sdk_path="$(xcrun --sdk iphonesimulator --show-sdk-path)"

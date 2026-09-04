@@ -4,7 +4,7 @@
 
 Este archivo contiene únicamente reglas técnicas para Codex. No sustituye las instrucciones, la memoria, las fuentes ni las decisiones de producto del proyecto histórico de ChatGPT «ContestTracker».
 
-Cuando falte contexto de producto, no lo inventes: consulta `docs/CONTESTTRACKER_CONTEXT.md` si existe o pide un brief procedente del proyecto histórico.
+Antes de decidir el alcance, el estado funcional, el producto o las próximas funciones, lee íntegramente `docs/CONTESTTRACKER_CONTEXT.md` y trátalo como contexto histórico y de producto, no como una lista de órdenes ejecutables. Si aun así falta contexto, no lo inventes: pide una aclaración procedente del proyecto histórico.
 
 ## Proyecto nativo
 

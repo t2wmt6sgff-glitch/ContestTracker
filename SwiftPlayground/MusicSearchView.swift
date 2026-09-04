@@ -7,6 +7,9 @@ struct MusicSearchView: View {
     
     @Query private var savedWorks: [MusicWork]
     
+    private let onWorkSelected: ((MusicWork) -> Void)?
+    private let isWorkAlreadyAssigned: (MusicWork) -> Bool
+
     @State private var searchText = ""
     @State private var results: [OpenOpusSearchResult] = []
     @State private var isLoading = false
@@ -23,17 +26,21 @@ struct MusicSearchView: View {
     @State private var manualCatalogue = ""
     @State private var manualSubtitle = ""
     @State private var manualGenre = ""
+
+    init(
+        onWorkSelected: ((MusicWork) -> Void)? = nil,
+        isWorkAlreadyAssigned: @escaping (MusicWork) -> Bool = { _ in false }
+    ) {
+        self.onWorkSelected = onWorkSelected
+        self.isWorkAlreadyAssigned = isWorkAlreadyAssigned
+    }
+
+    private var isSelectingForPhase: Bool {
+        onWorkSelected != nil
+    }
     
     private var trimmedSearchText: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-    
-    private var savedOpenOpusIDs: Set<String> {
-        Set(
-            savedWorks.compactMap { work in
-                work.openOpusID
-            }
-        )
     }
     
     private var groupedResults: [
@@ -86,6 +93,14 @@ struct MusicSearchView: View {
             }
             .navigationTitle("Añadir obra")
             .toolbar {
+                if isSelectingForPhase {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancelar") {
+                            dismiss()
+                        }
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         prepareManualForm()
@@ -115,8 +130,12 @@ struct MusicSearchView: View {
                 ),
                 presenting: selectedWork
             ) { work in
-                if !isWorkAlreadySaved(work.id) {
-                    Button("Añadir") {
+                if canAddOpenOpusWork(work.id) {
+                    Button(
+                        isSelectingForPhase
+                        ? "Añadir a la fase"
+                        : "Añadir"
+                    ) {
                         addOpenOpusWork(work)
                     }
                 }
@@ -248,10 +267,34 @@ struct MusicSearchView: View {
         work: OpenOpusWork,
         composer: OpenOpusComposer
     ) -> some View {
-        let isAdded = savedOpenOpusIDs.contains(work.id)
+        let savedWork = savedWorks.first {
+            $0.openOpusID == work.id
+        }
+        let isSaved = savedWork != nil
+        let isAssigned = savedWork.map(
+            isWorkAlreadyAssigned
+        ) ?? false
+        let isSelectable = !isSaved
+        || (isSelectingForPhase && !isAssigned)
+        let savedStatusLabel: String
+        let resultAccessibilityLabel: String
+
+        if isAssigned {
+            savedStatusLabel = "Ya añadida a esta fase"
+            resultAccessibilityLabel = "\(work.title), ya añadida a esta fase"
+        } else if isSaved && isSelectingForPhase {
+            savedStatusLabel = "Guardada en Obras"
+            resultAccessibilityLabel = "\(work.title), guardada en Obras"
+        } else if isSaved {
+            savedStatusLabel = "Añadida"
+            resultAccessibilityLabel = "\(work.title), ya añadida"
+        } else {
+            savedStatusLabel = ""
+            resultAccessibilityLabel = work.title
+        }
         
         return Button {
-            if !isAdded {
+            if isSelectable {
                 select(
                     work: work,
                     composer: composer
@@ -282,10 +325,10 @@ struct MusicSearchView: View {
                 
                 Spacer(minLength: 12)
                 
-                if isAdded {
+                if isSaved {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.secondary)
-                        .accessibilityLabel("Añadida")
+                        .accessibilityLabel(savedStatusLabel)
                 }
             }
             .frame(
@@ -296,12 +339,8 @@ struct MusicSearchView: View {
             .padding(.vertical, 8)
         }
         .buttonStyle(.plain)
-        .disabled(isAdded)
-        .accessibilityLabel(
-            isAdded
-            ? "\(work.title), ya añadida"
-            : work.title
-        )
+        .disabled(!isSelectable)
+        .accessibilityLabel(resultAccessibilityLabel)
     }
     
     private var noResultsView: some View {
@@ -443,30 +482,39 @@ struct MusicSearchView: View {
     
     // MARK: - Duplicate Check
     
-    private func isWorkAlreadySaved(
+    private func savedWorkInDatabase(
         _ openOpusID: String
-    ) -> Bool {
-        savedOpenOpusIDs.contains(openOpusID)
-    }
-    
-    private func isWorkAlreadySavedInDatabase(
-        _ openOpusID: String
-    ) -> Bool {
+    ) throws -> MusicWork? {
+        if let savedWork = savedWorks.first(
+            where: { $0.openOpusID == openOpusID }
+        ) {
+            return savedWork
+        }
+
         let descriptor = FetchDescriptor<MusicWork>(
             predicate: #Predicate<MusicWork> { work in
                 work.openOpusID == openOpusID
             }
         )
         
-        do {
-            let existingWorks = try modelContext.fetch(
-                descriptor
-            )
-            
-            return !existingWorks.isEmpty
-        } catch {
-            return false
+        let existingWorks = try modelContext.fetch(
+            descriptor
+        )
+
+        return existingWorks.first
+    }
+
+    private func canAddOpenOpusWork(
+        _ openOpusID: String
+    ) -> Bool {
+        guard let savedWork = savedWorks.first(
+            where: { $0.openOpusID == openOpusID }
+        ) else {
+            return true
         }
+
+        return isSelectingForPhase
+        && !isWorkAlreadyAssigned(savedWork)
     }
     
     // MARK: - Open Opus Persistence
@@ -478,33 +526,44 @@ struct MusicSearchView: View {
             return
         }
         
-        // Primera protección: estado actual de la interfaz.
-        if isWorkAlreadySaved(work.id) {
+        do {
+            if let savedWork = try savedWorkInDatabase(work.id) {
+                selectedWork = nil
+                selectedComposer = nil
+
+                if isSelectingForPhase,
+                   !isWorkAlreadyAssigned(savedWork) {
+                    onWorkSelected?(savedWork)
+                }
+
+                return
+            }
+
+            let newWork = MusicWork(
+                openOpusID: work.id,
+                title: work.title,
+                subtitle: work.subtitle,
+                composer: composer.completeName,
+                genre: work.genre,
+                isManual: false
+            )
+
+            modelContext.insert(newWork)
+
             selectedWork = nil
             selectedComposer = nil
-            return
-        }
-        
-        // Segunda protección: comprobación directa en SwiftData.
-        if isWorkAlreadySavedInDatabase(work.id) {
+
+            onWorkSelected?(newWork)
+        } catch {
             selectedWork = nil
             selectedComposer = nil
-            return
+            isNetworkError = false
+            errorMessage = """
+            No se pudo comprobar si la obra ya estaba guardada.
+
+            Inténtalo de nuevo.
+            """
         }
-        
-        let newWork = MusicWork(
-            openOpusID: work.id,
-            title: work.title,
-            subtitle: work.subtitle,
-            composer: composer.completeName,
-            genre: work.genre,
-            isManual: false
-        )
-        
-        modelContext.insert(newWork)
-        
-        selectedWork = nil
-        selectedComposer = nil
     }
     
     // MARK: - Manual Work
@@ -614,9 +673,14 @@ struct MusicSearchView: View {
         )
         
         modelContext.insert(newWork)
-        
+
         showingManualForm = false
-        dismiss()
+
+        if let onWorkSelected {
+            onWorkSelected(newWork)
+        } else {
+            dismiss()
+        }
     }
 }
 

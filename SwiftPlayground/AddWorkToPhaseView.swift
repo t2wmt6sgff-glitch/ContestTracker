@@ -11,6 +11,8 @@ struct AddWorkToPhaseView: View {
     let phase: ContestPhase
     
     @State private var searchText = ""
+    @State private var showingMusicSearch = false
+    @State private var shouldDismissAfterAddingNewWork = false
     @State private var showingPlaceholderForm = false
     @State private var placeholderText = ""
     
@@ -35,7 +37,19 @@ struct AddWorkToPhaseView: View {
         _ work: MusicWork
     ) -> Bool {
         phase.repertoireItems.contains {
-            $0.musicWork?.id == work.id
+            guard let existingWork = $0.musicWork else {
+                return false
+            }
+
+            if existingWork.id == work.id {
+                return true
+            }
+
+            guard let openOpusID = work.openOpusID else {
+                return false
+            }
+
+            return existingWork.openOpusID == openOpusID
         }
     }
     
@@ -87,6 +101,17 @@ struct AddWorkToPhaseView: View {
                     }
                 }
                 
+                Section("Nueva obra") {
+                    Button {
+                        showingMusicSearch = true
+                    } label: {
+                        Label(
+                            "Buscar en Open Opus o crear manualmente",
+                            systemImage: "magnifyingglass"
+                        )
+                    }
+                }
+
                 Section("Elemento provisional") {
                     Button {
                         placeholderText = ""
@@ -105,6 +130,28 @@ struct AddWorkToPhaseView: View {
             )
             .navigationTitle("Añadir obra")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(
+                isPresented: $showingMusicSearch,
+                onDismiss: {
+                    if shouldDismissAfterAddingNewWork {
+                        shouldDismissAfterAddingNewWork = false
+                        dismiss()
+                    }
+                }
+            ) {
+                MusicSearchView(
+                    onWorkSelected: { work in
+                        if add(work) {
+                            shouldDismissAfterAddingNewWork = true
+                        }
+
+                        showingMusicSearch = false
+                    },
+                    isWorkAlreadyAssigned: { work in
+                        isAlreadyAdded(work)
+                    }
+                )
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cerrar") {
@@ -143,11 +190,12 @@ struct AddWorkToPhaseView: View {
         }
     }
     
+    @discardableResult
     private func add(
         _ work: MusicWork
-    ) {
+    ) -> Bool {
         guard !isAlreadyAdded(work) else {
-            return
+            return false
         }
         
         let item = ContestRepertoireItem(
@@ -156,6 +204,8 @@ struct AddWorkToPhaseView: View {
         
         phase.repertoireItems.append(item)
         modelContext.insert(item)
+
+        return true
     }
     
     private func addPlaceholder() {

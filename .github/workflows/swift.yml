@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Type-check iPad app sources
-      working-directory: SwiftPlayground
+      working-directory: ContestTracker.swiftpm
       shell: bash
       run: |
         sdk_path="$(xcrun --sdk iphonesimulator --show-sdk-path)"
@@ -24,24 +24,3 @@ jobs:
               -sdk "$sdk_path" \
               -target arm64-apple-ios17.6-simulator \
               -module-name ContestTracker
-
-    - name: Create Swift Playgrounds app package
-      shell: bash
-      run: |
-        rm -rf artifact
-        mkdir -p artifact/ContestTracker.swiftpm
-
-        rsync -a \
-          --exclude '.DS_Store' \
-          SwiftPlayground/ \
-          artifact/ContestTracker.swiftpm/
-
-        test -f artifact/ContestTracker.swiftpm/Package.swift
-
-    - name: Upload Swift Playgrounds package
-      uses: actions/upload-artifact@v4
-      with:
-        name: ContestTracker-swiftpm-${{ github.sha }}
-        path: artifact/ContestTracker.swiftpm
-        if-no-files-found: error
-        retention-days: 30

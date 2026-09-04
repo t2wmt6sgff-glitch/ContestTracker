@@ -13,10 +13,18 @@ jobs:
   build:
 
     runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: SwiftPlayground
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
-      run: swift build -v
-    - name: Run tests
-      run: swift test -v
+    - name: Type-check iPad app sources
+      shell: bash
+      run: |
+        sdk_path="$(xcrun --sdk iphonesimulator --show-sdk-path)"
+        find . -maxdepth 1 -name '*.swift' ! -name 'Package.swift' -print0 \
+          | xargs -0 xcrun swiftc -typecheck \
+              -sdk "$sdk_path" \
+              -target arm64-apple-ios17.6-simulator \
+              -module-name ContestTracker

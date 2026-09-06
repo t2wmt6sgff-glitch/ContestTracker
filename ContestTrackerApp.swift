@@ -31,7 +31,7 @@ struct ContestTrackerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContestTrackerRootView()
         }
         .modelContainer(sharedModelContainer)
     }

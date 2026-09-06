@@ -11,6 +11,7 @@ struct ContestDetailView: View {
     
     @State private var phaseToDelete: ContestPhase?
     @State private var showingDeletePhaseConfirmation = false
+    @State private var showingCalendarEditor = false
     
     private var sortedPhases: [ContestPhase] {
         contest.phases.sorted {
@@ -67,6 +68,17 @@ struct ContestDetailView: View {
                 )
             }
             
+            Section("Acciones") {
+                Button {
+                    showingCalendarEditor = true
+                } label: {
+                    Label(
+                        "Añadir al calendario",
+                        systemImage: "calendar.badge.plus"
+                    )
+                }
+            }
+            
             Section("Repertorio") {
                 if sortedPhases.isEmpty {
                     emptyPhasesView
@@ -118,6 +130,15 @@ struct ContestDetailView: View {
         }
         .navigationTitle("Detalle")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingCalendarEditor) {
+            CalendarEventEditView(
+                title: contest.name,
+                date: contest.date,
+                location: contest.location,
+                notes: contest.notes,
+                isPresented: $showingCalendarEditor
+            )
+        }
         
         // MARK: - Nueva fase
         

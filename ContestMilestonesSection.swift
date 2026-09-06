@@ -5,25 +5,10 @@ struct ContestMilestonesSection: View {
     @Environment(\.modelContext) private var modelContext
     
     let contest: Contest
+    let onAddMilestone: () -> Void
+    let onEditMilestone: (ContestMilestone) -> Void
+    let onAddMilestoneToCalendar: (ContestMilestone) -> Void
     
-    private enum ActiveSheet: Identifiable {
-        case add
-        case edit(ContestMilestone)
-        case calendar(ContestMilestone)
-        
-        var id: String {
-            switch self {
-            case .add:
-                return "add"
-            case .edit(let milestone):
-                return "edit-\(milestone.id.uuidString)"
-            case .calendar(let milestone):
-                return "calendar-\(milestone.id.uuidString)"
-            }
-        }
-    }
-    
-    @State private var activeSheet: ActiveSheet?
     @State private var milestoneToDelete: ContestMilestone?
     @State private var showingDeleteConfirmation = false
     
@@ -52,7 +37,7 @@ struct ContestMilestonesSection: View {
                     .foregroundStyle(.secondary)
                     
                     Button {
-                        activeSheet = .add
+                        onAddMilestone()
                     } label: {
                         Label(
                             "Añadir fecha importante",
@@ -75,7 +60,7 @@ struct ContestMilestonesSection: View {
                             }
                             
                             Button {
-                                activeSheet = .edit(milestone)
+                                onEditMilestone(milestone)
                             } label: {
                                 Label(
                                     "Editar",
@@ -86,46 +71,13 @@ struct ContestMilestonesSection: View {
                 }
                 
                 Button {
-                    activeSheet = .add
+                    onAddMilestone()
                 } label: {
                     Label(
                         "Añadir fecha importante",
                         systemImage: "plus"
                     )
                 }
-            }
-        }
-        .sheet(item: $activeSheet) { sheet in
-            switch sheet {
-            case .add:
-                ContestMilestoneFormView(
-                    contest: contest
-                )
-                
-            case .edit(let milestone):
-                ContestMilestoneFormView(
-                    contest: contest,
-                    milestone: milestone
-                )
-                
-            case .calendar(let milestone):
-                CalendarEventEditView(
-                    title: "\(milestone.title) – \(contest.name)",
-                    date: milestone.date,
-                    location: contest.location,
-                    notes: milestone.notes,
-                    includesTime: milestone.includesTime,
-                    isPresented: Binding(
-                        get: {
-                            activeSheet != nil
-                        },
-                        set: { isPresented in
-                            if !isPresented {
-                                activeSheet = nil
-                            }
-                        }
-                    )
-                )
             }
         }
         .alert(
@@ -211,7 +163,7 @@ struct ContestMilestonesSection: View {
             
             Menu {
                 Button {
-                    activeSheet = .calendar(milestone)
+                    onAddMilestoneToCalendar(milestone)
                 } label: {
                     Label(
                         "Añadir al calendario",
@@ -238,7 +190,7 @@ struct ContestMilestonesSection: View {
                 Divider()
                 
                 Button {
-                    activeSheet = .edit(milestone)
+                    onEditMilestone(milestone)
                 } label: {
                     Label(
                         "Editar",

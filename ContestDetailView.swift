@@ -1,6 +1,26 @@
 import SwiftUI
 import SwiftData
 
+private enum ContestDetailSheet: Identifiable {
+    case contestCalendar
+    case addMilestone
+    case editMilestone(ContestMilestone)
+    case milestoneCalendar(ContestMilestone)
+    
+    var id: String {
+        switch self {
+        case .contestCalendar:
+            return "contest-calendar"
+        case .addMilestone:
+            return "add-milestone"
+        case .editMilestone(let milestone):
+            return "edit-milestone-\(milestone.id.uuidString)"
+        case .milestoneCalendar(let milestone):
+            return "milestone-calendar-\(milestone.id.uuidString)"
+        }
+    }
+}
+
 struct ContestDetailView: View {
     @Environment(\.modelContext) private var modelContext
     
@@ -11,7 +31,7 @@ struct ContestDetailView: View {
     
     @State private var phaseToDelete: ContestPhase?
     @State private var showingDeletePhaseConfirmation = false
-    @State private var showingCalendarEditor = false
+    @State private var activeSheet: ContestDetailSheet?
     
     private var sortedPhases: [ContestPhase] {
         contest.phases.sorted {
@@ -70,7 +90,7 @@ struct ContestDetailView: View {
             
             Section("Acciones") {
                 Button {
-                    showingCalendarEditor = true
+                    activeSheet = .contestCalendar
                 } label: {
                     Label(
                         "Añadir al calendario",
@@ -80,7 +100,16 @@ struct ContestDetailView: View {
             }
             
             ContestMilestonesSection(
-                contest: contest
+                contest: contest,
+                onAddMilestone: {
+                    activeSheet = .addMilestone
+                },
+                onEditMilestone: { milestone in
+                    activeSheet = .editMilestone(milestone)
+                },
+                onAddMilestoneToCalendar: { milestone in
+                    activeSheet = .milestoneCalendar(milestone)
+                }
             )
             
             Section("Repertorio") {
@@ -134,14 +163,38 @@ struct ContestDetailView: View {
         }
         .navigationTitle("Detalle")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showingCalendarEditor) {
-            CalendarEventEditView(
-                title: contest.name,
-                date: contest.date,
-                location: contest.location,
-                notes: contest.notes,
-                isPresented: $showingCalendarEditor
-            )
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .contestCalendar:
+                CalendarEventEditView(
+                    title: contest.name,
+                    date: contest.date,
+                    location: contest.location,
+                    notes: contest.notes,
+                    isPresented: activeSheetIsPresented
+                )
+                
+            case .addMilestone:
+                ContestMilestoneFormView(
+                    contest: contest
+                )
+                
+            case .editMilestone(let milestone):
+                ContestMilestoneFormView(
+                    contest: contest,
+                    milestone: milestone
+                )
+                
+            case .milestoneCalendar(let milestone):
+                CalendarEventEditView(
+                    title: "\(milestone.title) – \(contest.name)",
+                    date: milestone.date,
+                    location: contest.location,
+                    notes: milestone.notes,
+                    includesTime: milestone.includesTime,
+                    isPresented: activeSheetIsPresented
+                )
+            }
         }
         
         // MARK: - Nueva fase
@@ -204,6 +257,19 @@ struct ContestDetailView: View {
                 "También se eliminarán las obras asignadas a esta fase."
             )
         }
+    }
+    
+    private var activeSheetIsPresented: Binding<Bool> {
+        Binding(
+            get: {
+                activeSheet != nil
+            },
+            set: { isPresented in
+                if !isPresented {
+                    activeSheet = nil
+                }
+            }
+        )
     }
     
     // MARK: - Empty Phases

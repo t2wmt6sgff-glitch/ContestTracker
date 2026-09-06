@@ -6,17 +6,31 @@ struct ContestMilestonesSection: View {
     
     let contest: Contest
     
-    @State private var showingAddMilestone = false
-    @State private var milestoneToEdit: ContestMilestone?
+    private enum ActiveSheet: Identifiable {
+        case add
+        case edit(ContestMilestone)
+        case calendar(ContestMilestone)
+        
+        var id: String {
+            switch self {
+            case .add:
+                return "add"
+            case .edit(let milestone):
+                return "edit-\(milestone.id.uuidString)"
+            case .calendar(let milestone):
+                return "calendar-\(milestone.id.uuidString)"
+            }
+        }
+    }
+    
+    @State private var activeSheet: ActiveSheet?
     @State private var milestoneToDelete: ContestMilestone?
     @State private var showingDeleteConfirmation = false
     
-    @State private var calendarMilestone: ContestMilestone?
-    @State private var showingCalendarEditor = false
-    
     @State private var reminderSavingID: UUID?
-    @State private var reminderMessage = ""
-    @State private var showingReminderMessage = false
+    @State private var messageTitle = "Recordatorios"
+    @State private var messageText = ""
+    @State private var showingMessage = false
     
     private var sortedMilestones: [ContestMilestone] {
         contest.milestones.sorted {
@@ -38,7 +52,7 @@ struct ContestMilestonesSection: View {
                     .foregroundStyle(.secondary)
                     
                     Button {
-                        showingAddMilestone = true
+                        activeSheet = .add
                     } label: {
                         Label(
                             "Añadir fecha importante",
@@ -61,7 +75,7 @@ struct ContestMilestonesSection: View {
                             }
                             
                             Button {
-                                milestoneToEdit = milestone
+                                activeSheet = .edit(milestone)
                             } label: {
                                 Label(
                                     "Editar",
@@ -72,7 +86,7 @@ struct ContestMilestonesSection: View {
                 }
                 
                 Button {
-                    showingAddMilestone = true
+                    activeSheet = .add
                 } label: {
                     Label(
                         "Añadir fecha importante",
@@ -81,31 +95,36 @@ struct ContestMilestonesSection: View {
                 }
             }
         }
-        .sheet(isPresented: $showingAddMilestone) {
-            ContestMilestoneFormView(
-                contest: contest
-            )
-        }
-        .sheet(item: $milestoneToEdit) { milestone in
-            ContestMilestoneFormView(
-                contest: contest,
-                milestone: milestone
-            )
-        }
-        .sheet(
-            isPresented: $showingCalendarEditor,
-            onDismiss: {
-                calendarMilestone = nil
-            }
-        ) {
-            if let milestone = calendarMilestone {
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .add:
+                ContestMilestoneFormView(
+                    contest: contest
+                )
+                
+            case .edit(let milestone):
+                ContestMilestoneFormView(
+                    contest: contest,
+                    milestone: milestone
+                )
+                
+            case .calendar(let milestone):
                 CalendarEventEditView(
                     title: "\(milestone.title) – \(contest.name)",
                     date: milestone.date,
                     location: contest.location,
                     notes: milestone.notes,
                     includesTime: milestone.includesTime,
-                    isPresented: $showingCalendarEditor
+                    isPresented: Binding(
+                        get: {
+                            activeSheet != nil
+                        },
+                        set: { isPresented in
+                            if !isPresented {
+                                activeSheet = nil
+                            }
+                        }
+                    )
                 )
             }
         }
@@ -139,13 +158,13 @@ struct ContestMilestonesSection: View {
             }
         }
         .alert(
-            "Recordatorios",
-            isPresented: $showingReminderMessage
+            messageTitle,
+            isPresented: $showingMessage
         ) {
             Button("Aceptar", role: .cancel) {
             }
         } message: {
-            Text(reminderMessage)
+            Text(messageText)
         }
     }
     
@@ -192,8 +211,7 @@ struct ContestMilestonesSection: View {
             
             Menu {
                 Button {
-                    calendarMilestone = milestone
-                    showingCalendarEditor = true
+                    activeSheet = .calendar(milestone)
                 } label: {
                     Label(
                         "Añadir al calendario",
@@ -220,7 +238,7 @@ struct ContestMilestonesSection: View {
                 Divider()
                 
                 Button {
-                    milestoneToEdit = milestone
+                    activeSheet = .edit(milestone)
                 } label: {
                     Label(
                         "Editar",
@@ -266,7 +284,15 @@ struct ContestMilestonesSection: View {
         }
         
         modelContext.delete(milestone)
-        milestoneToDelete = nil
+        
+        do {
+            try modelContext.save()
+            milestoneToDelete = nil
+        } catch {
+            messageTitle = "No se pudo guardar"
+            messageText = error.localizedDescription
+            showingMessage = true
+        }
     }
     
     @MainActor
@@ -291,15 +317,24 @@ struct ContestMilestonesSection: View {
             )
             
             milestone.reminderIdentifier = identifier
-            reminderMessage = wasAlreadyLinked
-            ? "El recordatorio se ha actualizado."
-            : "El recordatorio se ha creado en la app Recordatorios."
+            
+            do {
+                try modelContext.save()
+                messageTitle = "Recordatorios"
+                messageText = wasAlreadyLinked
+                ? "El recordatorio se ha actualizado."
+                : "El recordatorio se ha creado en la app Recordatorios."
+            } catch {
+                messageTitle = "Recordatorio creado"
+                messageText = "El recordatorio se ha guardado en la app Recordatorios, pero Contest Tracker no pudo guardar su vínculo local: \(error.localizedDescription)"
+            }
         } catch {
-            reminderMessage = error.localizedDescription
+            messageTitle = "Recordatorios"
+            messageText = error.localizedDescription
         }
         
         reminderSavingID = nil
-        showingReminderMessage = true
+        showingMessage = true
     }
     
     private func formattedDate(

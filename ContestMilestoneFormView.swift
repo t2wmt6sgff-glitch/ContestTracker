@@ -13,6 +13,9 @@ struct ContestMilestoneFormView: View {
     @State private var includesTime: Bool
     @State private var notes: String
     
+    @State private var saveErrorMessage = ""
+    @State private var showingSaveError = false
+    
     init(
         contest: Contest,
         milestone: ContestMilestone? = nil
@@ -88,6 +91,15 @@ struct ContestMilestoneFormView: View {
                     )
                 }
             }
+            .alert(
+                "No se pudo guardar",
+                isPresented: $showingSaveError
+            ) {
+                Button("Aceptar", role: .cancel) {
+                }
+            } message: {
+                Text(saveErrorMessage)
+            }
         }
     }
     
@@ -116,10 +128,16 @@ struct ContestMilestoneFormView: View {
                 notes: trimmedNotes
             )
             
-            contest.milestones.append(newMilestone)
             modelContext.insert(newMilestone)
+            contest.milestones.append(newMilestone)
         }
         
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveErrorMessage = error.localizedDescription
+            showingSaveError = true
+        }
     }
 }

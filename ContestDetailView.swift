@@ -79,6 +79,10 @@ struct ContestDetailView: View {
                 }
             }
             
+            ContestMilestonesSection(
+                contest: contest
+            )
+            
             Section("Repertorio") {
                 if sortedPhases.isEmpty {
                     emptyPhasesView
@@ -489,7 +493,8 @@ struct ContestDetailView: View {
             Contest.self,
             MusicWork.self,
             ContestPhase.self,
-            ContestRepertoireItem.self
+            ContestRepertoireItem.self,
+            ContestMilestone.self
         ],
         inMemory: true
     )

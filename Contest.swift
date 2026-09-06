@@ -11,6 +11,9 @@ final class Contest {
     @Relationship(deleteRule: .cascade)
     var phases: [ContestPhase]
     
+    @Relationship(deleteRule: .cascade)
+    var milestones: [ContestMilestone]
+    
     init(
         name: String,
         date: Date,
@@ -22,5 +25,6 @@ final class Contest {
         self.location = location
         self.notes = notes
         self.phases = []
+        self.milestones = []
     }
 }

@@ -31,7 +31,8 @@ let package = Package(
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
             ],
             capabilities: [
-                .calendars(purposeString: "Necesitamos acceso a tu calendario para poder sincronizar tus eventos con el calendario")
+                .calendars(purposeString: "Necesitamos acceso a tu calendario para poder sincronizar tus eventos con el calendario"),
+                .reminders(purposeString: "Contest Tracker necesita acceso a Recordatorios para crear y actualizar avisos de fechas importantes de tus concursos.")
             ],
             appCategory: .music
         )

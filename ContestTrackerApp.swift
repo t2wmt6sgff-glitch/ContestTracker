@@ -17,6 +17,7 @@ struct ContestTrackerApp: App {
                 MusicWork.self,
                 ContestPhase.self,
                 ContestRepertoireItem.self,
+                ContestMilestone.self,
                 ContestArchive.self,
                 configurations: configuration
             )

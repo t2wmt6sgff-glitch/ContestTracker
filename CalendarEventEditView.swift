@@ -7,8 +7,25 @@ struct CalendarEventEditView: UIViewControllerRepresentable {
     let date: Date
     let location: String
     let notes: String
+    let includesTime: Bool
     
     @Binding var isPresented: Bool
+    
+    init(
+        title: String,
+        date: Date,
+        location: String,
+        notes: String,
+        includesTime: Bool = false,
+        isPresented: Binding<Bool>
+    ) {
+        self.title = title
+        self.date = date
+        self.location = location
+        self.notes = notes
+        self.includesTime = includesTime
+        _isPresented = isPresented
+    }
     
     func makeCoordinator() -> Coordinator {
         Coordinator(isPresented: $isPresented)
@@ -19,19 +36,30 @@ struct CalendarEventEditView: UIViewControllerRepresentable {
     ) -> EKEventEditViewController {
         let eventStore = EKEventStore()
         let event = EKEvent(eventStore: eventStore)
-        
         let calendar = Calendar.current
-        let startDate = calendar.startOfDay(for: date)
-        let endDate = calendar.date(
-            byAdding: .day,
-            value: 1,
-            to: startDate
-        ) ?? startDate.addingTimeInterval(24 * 60 * 60)
+        
+        if includesTime {
+            event.startDate = date
+            event.endDate = calendar.date(
+                byAdding: .hour,
+                value: 1,
+                to: date
+            ) ?? date.addingTimeInterval(60 * 60)
+            event.isAllDay = false
+        } else {
+            let startDate = calendar.startOfDay(for: date)
+            let endDate = calendar.date(
+                byAdding: .day,
+                value: 1,
+                to: startDate
+            ) ?? startDate.addingTimeInterval(24 * 60 * 60)
+            
+            event.startDate = startDate
+            event.endDate = endDate
+            event.isAllDay = true
+        }
         
         event.title = title
-        event.startDate = startDate
-        event.endDate = endDate
-        event.isAllDay = true
         
         let trimmedLocation = location.trimmingCharacters(
             in: .whitespacesAndNewlines

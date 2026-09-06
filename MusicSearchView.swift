@@ -9,7 +9,7 @@ struct MusicSearchView: View {
     
     private let onWorkSelected: ((MusicWork) -> Void)?
     private let isWorkAlreadyAssigned: (MusicWork) -> Bool
-
+    
     @State private var searchText = ""
     @State private var results: [OpenOpusSearchResult] = []
     @State private var isLoading = false
@@ -26,7 +26,7 @@ struct MusicSearchView: View {
     @State private var manualCatalogue = ""
     @State private var manualSubtitle = ""
     @State private var manualGenre = ""
-
+    
     init(
         onWorkSelected: ((MusicWork) -> Void)? = nil,
         isWorkAlreadyAssigned: @escaping (MusicWork) -> Bool = { _ in false }
@@ -34,7 +34,7 @@ struct MusicSearchView: View {
         self.onWorkSelected = onWorkSelected
         self.isWorkAlreadyAssigned = isWorkAlreadyAssigned
     }
-
+    
     private var isSelectingForPhase: Bool {
         onWorkSelected != nil
     }
@@ -100,7 +100,7 @@ struct MusicSearchView: View {
                         }
                     }
                 }
-
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         prepareManualForm()
@@ -278,7 +278,7 @@ struct MusicSearchView: View {
         || (isSelectingForPhase && !isAssigned)
         let savedStatusLabel: String
         let resultAccessibilityLabel: String
-
+        
         if isAssigned {
             savedStatusLabel = "Ya añadida a esta fase"
             resultAccessibilityLabel = "\(work.title), ya añadida a esta fase"
@@ -490,7 +490,7 @@ struct MusicSearchView: View {
         ) {
             return savedWork
         }
-
+        
         let descriptor = FetchDescriptor<MusicWork>(
             predicate: #Predicate<MusicWork> { work in
                 work.openOpusID == openOpusID
@@ -500,10 +500,10 @@ struct MusicSearchView: View {
         let existingWorks = try modelContext.fetch(
             descriptor
         )
-
+        
         return existingWorks.first
     }
-
+    
     private func canAddOpenOpusWork(
         _ openOpusID: String
     ) -> Bool {
@@ -512,7 +512,7 @@ struct MusicSearchView: View {
         ) else {
             return true
         }
-
+        
         return isSelectingForPhase
         && !isWorkAlreadyAssigned(savedWork)
     }
@@ -530,15 +530,15 @@ struct MusicSearchView: View {
             if let savedWork = try savedWorkInDatabase(work.id) {
                 selectedWork = nil
                 selectedComposer = nil
-
+                
                 if isSelectingForPhase,
                    !isWorkAlreadyAssigned(savedWork) {
                     onWorkSelected?(savedWork)
                 }
-
+                
                 return
             }
-
+            
             let newWork = MusicWork(
                 openOpusID: work.id,
                 title: work.title,
@@ -547,12 +547,12 @@ struct MusicSearchView: View {
                 genre: work.genre,
                 isManual: false
             )
-
+            
             modelContext.insert(newWork)
-
+            
             selectedWork = nil
             selectedComposer = nil
-
+            
             onWorkSelected?(newWork)
         } catch {
             selectedWork = nil
@@ -560,7 +560,7 @@ struct MusicSearchView: View {
             isNetworkError = false
             errorMessage = """
             No se pudo comprobar si la obra ya estaba guardada.
-
+            
             Inténtalo de nuevo.
             """
         }
@@ -673,21 +673,13 @@ struct MusicSearchView: View {
         )
         
         modelContext.insert(newWork)
-
+        
         showingManualForm = false
-
+        
         if let onWorkSelected {
             onWorkSelected(newWork)
         } else {
             dismiss()
         }
     }
-}
-
-#Preview {
-    MusicSearchView()
-        .modelContainer(
-            for: MusicWork.self,
-            inMemory: true
-        )
 }

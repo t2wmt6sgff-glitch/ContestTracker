@@ -10,7 +10,7 @@ import AppleProductTypes
 let package = Package(
     name: "Contest Tracker",
     platforms: [
-        .iOS("17.6")
+        .iOS("18.2")
     ],
     products: [
         .iOSApplication(
@@ -29,6 +29,9 @@ let package = Package(
                 .landscapeRight,
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
+            ],
+            capabilities: [
+                .calendars(purposeString: "Necesitamos acceso a tu calendario para poder sincronizar tus eventos con el calendario")
             ],
             appCategory: .music
         )

@@ -40,15 +40,15 @@ struct AddWorkToPhaseView: View {
             guard let existingWork = $0.musicWork else {
                 return false
             }
-
+            
             if existingWork.id == work.id {
                 return true
             }
-
+            
             guard let openOpusID = work.openOpusID else {
                 return false
             }
-
+            
             return existingWork.openOpusID == openOpusID
         }
     }
@@ -111,7 +111,7 @@ struct AddWorkToPhaseView: View {
                         )
                     }
                 }
-
+                
                 Section("Elemento provisional") {
                     Button {
                         placeholderText = ""
@@ -144,7 +144,7 @@ struct AddWorkToPhaseView: View {
                         if add(work) {
                             shouldDismissAfterAddingNewWork = true
                         }
-
+                        
                         showingMusicSearch = false
                     },
                     isWorkAlreadyAssigned: { work in
@@ -204,7 +204,7 @@ struct AddWorkToPhaseView: View {
         
         phase.repertoireItems.append(item)
         modelContext.insert(item)
-
+        
         return true
     }
     

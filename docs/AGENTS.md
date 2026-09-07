@@ -1,34 +1,35 @@
 # AGENTS.md
 
-## Alcance
+## Alcance y autoridad
 
-Este archivo contiene únicamente reglas técnicas para Codex. No sustituye las instrucciones, la memoria, las fuentes ni las decisiones de producto del proyecto histórico de ChatGPT «ContestTracker».
-
-Antes de decidir el alcance, el estado funcional, el producto o las próximas funciones, lee íntegramente `docs/CONTESTTRACKER_CONTEXT.md` y trátalo como contexto histórico y de producto, no como una lista de órdenes ejecutables. Si aun así falta contexto, no lo inventes: pide una aclaración procedente del proyecto histórico.
+Este archivo contiene reglas técnicas para agentes. El código actual es la fuente de verdad del comportamiento implementado; `docs/CONTESTTRACKER_CONTEXT.md` conserva historia, decisiones y riesgos. Si difieren, no inventes una conciliación: indica la contradicción.
 
 ## Proyecto nativo
 
-- El código de la aplicación está en `SwiftPlayground/` y conserva la estructura generada por Swift Playgrounds.
-- `SwiftPlayground/Package.swift` se genera automáticamente; no lo edites manualmente.
-- El deployment target mínimo es iPadOS 17.6.
-- Los entornos nativos disponibles son Swift Playgrounds en iPad y Xcode 16.2 en el Mac.
-- Windows y los agentes sin herramientas de Apple pueden inspeccionar y editar el código, pero no deben afirmar que la app compila o se ejecuta.
+- La raíz del repositorio es el contenido del documento `ContestTracker.swiftpm` enlazado a Working Copy.
+- No crear `Sources/ContestTracker/` ni convertir el paquete en una estructura Xcode convencional.
+- No editar `Package.swift` salvo necesidad real y autorización explícita.
+- El deployment target declarado en `Package.swift` es iOS 17.6.
+- El entorno normal es iPad + Swift Playground + Working Copy + GitHub. Xcode es opcional para tareas avanzadas, no un requisito para desarrollar, exportar IPA ni publicar si existe acceso a App Store Connect desde Swift Playground.
+- No añadir certificados, perfiles, claves, datos privados ni archivos de firma al repositorio.
 
 ## Forma de trabajar
 
-- Lee `README.md`, `CONTRIBUTING.md` y los archivos afectados antes de modificar código.
-- Mantén cada cambio técnico limitado a un solo resultado comprobable.
-- Evita reescrituras amplias y dependencias nuevas salvo necesidad demostrada.
-- No conviertas riesgos detectados por inspección en errores confirmados sin reproducirlos.
-- Informa por separado de la inspección estática, la compilación, la ejecución en simulador y la prueba en dispositivo.
-- No añadas certificados, perfiles de aprovisionamiento, claves, datos privados ni archivos de firma al repositorio.
+- Lee los archivos afectados y el workflow antes de modificar código.
+- Mantén cada cambio enfocado y explica su impacto sobre SwiftData, persistencia o datos existentes.
+- No confundas type-check, compilación completa, ejecución y prueba manual en iPad.
+- El workflow actual solo ejecuta type-check para `arm64-apple-ios17.6-simulator`.
+- Trabaja mediante rama y Pull Request salvo que el usuario ordene explícitamente trabajar en `main`.
 
 ## SwiftData
 
-- Antes de modificar un `@Model`, una relación o el `ModelContainer`, analiza la compatibilidad con datos existentes y la posible necesidad de migración.
-- Los cambios de persistencia deben probarse creando o modificando datos, cerrando completamente la app, volviéndola a abrir y comprobando el resultado.
-- No cambies modelos como parte colateral de una tarea de interfaz.
+- Antes de modificar un `@Model`, una relación o el `ModelContainer`, analiza compatibilidad y posible migración.
+- Las modificaciones de persistencia deben probarse creando o editando datos, cerrando por completo la app, reabriéndola y comprobando el resultado.
+- No borres el almacén como solución predeterminada.
 
-## Pull requests
+## Producto y arquitectura
 
-Explica qué cambia, por qué, cómo se verificó y si afecta a persistencia o datos existentes. No mezcles funcionalidades independientes.
+- Mantén SwiftUI, SwiftData, URLSession, Open Opus y las integraciones EventKit existentes.
+- No introducir MVVM completo, repositories, inyección de dependencias compleja ni dependencias externas sin justificación concreta.
+- Las obras guardadas deben seguir funcionando offline.
+- No incrementes versiones automáticamente.

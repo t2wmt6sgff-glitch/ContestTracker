@@ -1,143 +1,101 @@
 # Contest Tracker
 
-Contest Tracker es una aplicación nativa para iPadOS diseñada para pianistas que preparan concursos de piano.
+Contest Tracker es una aplicación nativa para iPadOS dirigida a pianistas que preparan concursos. Reúne concursos, fases, repertorio y plazos importantes en una herramienta local, sencilla y utilizable sin conexión para los datos ya guardados.
 
-Su objetivo es proporcionar una herramienta sencilla para organizar concursos, fases y repertorio, manteniendo la información de forma local en el dispositivo.
+## Funciones actuales
 
-El proyecto está desarrollado con Swift, SwiftUI y SwiftData, y está pensado para ofrecer una experiencia sencilla, estable y adecuada para iPad.
+### Concursos
 
-## Características
+- Crear, editar y eliminar concursos.
+- Consultar fecha, lugar, notas, cuenta atrás y resumen de fases y obras.
+- Separar automáticamente concursos próximos y finalizados.
+- Archivar concursos finalizados, recuperarlos o eliminarlos definitivamente.
+- Crear, editar y eliminar fases.
+- Asignar repertorio a cada fase.
 
-Contest Tracker está orientado a la gestión de:
+### Obras y repertorio
 
-- Concursos de piano.
-- Fases de concursos.
-- Obras musicales.
-- Repertorio asociado a concursos.
-- Información y planificación relacionada con la participación en concursos.
+- Crear obras manualmente.
+- Buscar obras ya guardadas en el dispositivo.
+- Buscar y añadir obras mediante la API de Open Opus.
+- Consultar, editar y eliminar obras.
+- Reutilizar obras existentes al añadir repertorio a una fase para evitar duplicados innecesarios.
+- Asociar un enlace de YouTube a una obra, abrirlo, modificarlo o eliminarlo.
 
-Las funcionalidades de la aplicación evolucionarán progresivamente durante el desarrollo del proyecto.
+Open Opus se usa únicamente para descubrir obras. Al añadir una obra, sus datos se guardan localmente y siguen disponibles sin conexión.
 
-## Filosofía del proyecto
+### Fechas, Calendario y Recordatorios
 
-Contest Tracker prioriza:
+Cada concurso puede contener fechas importantes con título, fecha, hora opcional y notas. Se pueden crear, editar, eliminar, ordenar cronológicamente y consultar con su propia cuenta atrás.
 
-- Simplicidad.
-- Estabilidad.
-- Código comprensible.
-- Buena experiencia de usuario.
-- Persistencia fiable de los datos.
-- Funcionamiento local y offline siempre que sea posible.
-- Desarrollo progresivo.
-- Accesibilidad.
-- Compatibilidad con distintas generaciones de iPadOS.
+Desde el detalle de un concurso o de una fecha importante se abre el editor nativo de Apple Calendar mediante EventKitUI. Las fechas sin hora se proponen como eventos de día completo.
 
-El proyecto evita añadir complejidad técnica cuando una solución más sencilla puede resolver correctamente el mismo problema.
+Una fecha importante también puede crear o actualizar un recordatorio en Apple Reminders. Contest Tracker solicita el permiso del sistema y guarda el identificador del recordatorio para actualizar el mismo elemento en vez de crear duplicados. Eliminar una fecha importante no elimina automáticamente el recordatorio ya creado en Reminders.
 
-## Tecnología
+### Persistencia
 
-Contest Tracker utiliza principalmente:
+Los concursos, fases, repertorio, obras, archivado y fechas importantes se almacenan localmente con SwiftData. Las operaciones principales de fechas importantes guardan explícitamente el contexto para mejorar la fiabilidad, especialmente al ejecutar desde Swift Playground.
 
-- Swift
-- SwiftUI
-- SwiftData
-- URLSession
-- Swift Playgrounds
+## Tecnología y arquitectura
 
-El proyecto está desarrollado como un paquete `.swiftpm`.
+- Swift y SwiftUI.
+- SwiftData para almacenamiento local.
+- URLSession y Open Opus API para búsqueda de obras.
+- EventKit y EventKitUI para Calendar y Reminders.
+- Sin backend, cuentas, iCloud ni servidores propios.
 
-El objetivo mínimo de compatibilidad es:
+La arquitectura se mantiene deliberadamente ligera: no se introducen MVVM completo, repositories, inyección de dependencias compleja ni dependencias externas sin una necesidad demostrada.
 
-**iPadOS 17.6 o posterior**
+## Desarrollo desde iPad
 
-El desarrollo puede realizarse desde Swift Playgrounds y, posteriormente, desde Xcode.
+El flujo normal no requiere Mac ni Xcode:
 
-## Arquitectura
+```text
+Swift Playground
+      ↕
+Working Copy
+      ↕
+GitHub
+      ↓
+GitHub Actions
+Swift Playground
+      ↓
+Exportar IPA
+      ↓
+firma e instalación
+```
 
-La arquitectura de Contest Tracker está deliberadamente orientada a mantener el proyecto sencillo.
+El repositorio y el documento `ContestTracker.swiftpm` usado por Swift Playground están enlazados mediante Working Copy. Swift Playground guarda los cambios en ese documento; Working Copy permite revisar el diff, hacer commit y push. Después de fusionar una Pull Request, se cierra el proyecto en Swift Playground, se hace Pull en Working Copy y se vuelve a abrir el mismo documento para probar.
 
-La aplicación utiliza SwiftUI para la interfaz y SwiftData para la persistencia local.
+No actives Auto-Sync si quieres revisar manualmente cada commit y push.
 
-No se introducen patrones arquitectónicos, capas de abstracción, dependencias o frameworks adicionales salvo que exista una necesidad técnica real.
+### GitHub Actions
 
-En particular, el proyecto evita introducir automáticamente:
+El workflow `.github/workflows/swift.yml` se ejecuta en push a `main`, Pull Requests hacia `main` y `workflow_dispatch`. Ejecuta `swiftc -typecheck` sobre los archivos Swift con el SDK de iOS Simulator y el target `arm64-apple-ios17.6-simulator`.
 
-- MVVM completo.
-- Repositories.
-- Dependency Injection compleja.
-- Capas de servicios innecesarias.
-- Frameworks externos sin una justificación clara.
+Esta comprobación valida el type-check; no es una compilación completa, no ejecuta la app y no sustituye la prueba manual en iPad.
 
-La arquitectura puede evolucionar si las necesidades del proyecto cambian, pero cualquier aumento de complejidad debe estar justificado.
+## Exportar IPA
 
-## Datos y privacidad
+En **Ajustes → Desarrollo → Exportar IPA**, la app puede localizar el bundle `.app` que está ejecutando Swift Playground, crear `Payload`, empaquetarlo y mostrar el selector de archivos de iPadOS para guardar un `.ipa`.
 
-Contest Tracker está diseñado como una aplicación local.
+La exportación se ha probado correctamente en iPad. Crear el archivo IPA no equivale a firmarlo ni instalarlo: iPadOS seguirá exigiendo una firma y un perfil de aprovisionamiento válidos para instalarlo fuera de Swift Playground.
 
-La aplicación no requiere:
+No hace falta pertenecer al Apple Developer Program para desarrollar desde iPad ni para esta exportación local. La membresía sí es necesaria para publicar en App Store. Si en el futuro existe membresía, Swift Playground puede enviar la app directamente a App Store Connect; Xcode seguiría siendo opcional.
 
-- Cuentas de usuario.
-- Backend propio.
-- Servidores propios.
-- Autenticación.
-- iCloud.
-- Bases de datos remotas.
-
-Los datos creados por el usuario se almacenan localmente en el dispositivo.
-
-Las funcionalidades que necesiten acceso a Internet pueden utilizar servicios externos cuando sea necesario para proporcionar una determinada función, pero estos servicios no constituyen el sistema principal de almacenamiento de Contest Tracker.
-
-## Open Opus
-
-Contest Tracker puede utilizar Open Opus como fuente para descubrir información sobre obras musicales.
-
-Open Opus se utiliza como servicio de consulta y descubrimiento. La información necesaria de una obra puede almacenarse localmente después de que el usuario la añada a Contest Tracker.
-
-El proyecto no incorpora una copia completa de la base de datos de Open Opus.
-
-API:
-
-https://api.openopus.org
-
-## Desarrollo
-
-Contest Tracker se desarrolla de forma incremental.
-
-Los cambios importantes se realizan procurando:
-
-1. Mantener un estado funcional.
-2. Realizar cambios pequeños y controlados.
-3. Probar los cambios en el dispositivo.
-4. Evitar regresiones.
-5. Mantener la persistencia de los datos.
-6. Documentar las decisiones técnicas importantes cuando sea necesario.
-
-Los cambios que afecten a los modelos de SwiftData deben tratarse con especial cuidado, ya que pueden afectar a datos existentes.
+Xcode puede ser útil para depuración avanzada, Instruments o pruebas más complejas, pero no forma parte del flujo normal de desarrollo ni de exportación.
 
 ## Compatibilidad
 
-El proyecto tiene como objetivo funcionar en iPadOS 17.6 y versiones posteriores compatibles.
+El objetivo documentado del proyecto es **iPadOS 17.6 o posterior**. `Package.swift` declara actualmente `.iOS("17.6")`; no hay una discrepancia activa con iPadOS 18.2.
 
-Las APIs exclusivas de versiones recientes de iPadOS no deben utilizarse cuando exista una alternativa compatible con el deployment target, salvo que exista una razón clara para hacerlo.
+## Fuera de alcance actual
 
-También se tiene en cuenta la compatibilidad futura con versiones de Xcode utilizadas para desarrollar y mantener el proyecto.
-
-## Código abierto
-
-Contest Tracker es un proyecto de código abierto.
-
-Las contribuciones, correcciones, propuestas y mejoras son bienvenidas siempre que sean coherentes con los objetivos y la arquitectura del proyecto.
-
-Antes de realizar cambios importantes, consulta `CONTRIBUTING.md`.
+- Backend, cuentas, iCloud y sincronización entre dispositivos.
+- Funciones sociales o multiusuario.
+- Gestión completa de práctica, simulacros o estadísticas.
+- IA, recomendaciones automáticas, audio, partituras y catálogo masivo propio de obras.
 
 ## Licencia
 
-Contest Tracker se distribuye bajo los términos de la **GNU General Public License v3.0**.
-
-Puedes consultar el texto completo de la licencia en el archivo `LICENSE`.
-
-## Proyecto
-
-Contest Tracker está desarrollado como un proyecto independiente y no depende de un servicio online para funcionar como gestor local de concursos y repertorio.
-
-El proyecto evoluciona progresivamente con el objetivo de convertirse en una herramienta útil para pianistas que preparan concursos.
+Contest Tracker se distribuye bajo la [GNU General Public License v3.0](../LICENSE).

@@ -8,6 +8,31 @@
 >
 > No sustituye al código como fuente del comportamiento implementado. Cuando existe una contradicción, se documenta expresamente.
 
+> **Actualización operativa — 7 de septiembre de 2026.** Este expediente conserva el contexto histórico consolidado el 4 de septiembre. Para el estado actual, prevalece el código de `main` y esta actualización: la raíz del repositorio representa el documento `ContestTracker.swiftpm` enlazado con Working Copy; el desarrollo habitual se realiza íntegramente desde iPad; la app integra Calendar, fechas importantes, Recordatorios y exportación local de IPA; y Xcode es opcional. Las referencias posteriores a `SwiftPlayground/`, a calendario/recordatorios como trabajo futuro o a Xcode como requisito son históricas y no describen el estado vigente.
+
+## Estado actual posterior a la consolidación
+
+### Funcional
+
+- Concursos: crear, editar, eliminar, archivar y recuperar; cuenta atrás; fases y repertorio por fase.
+- Obras manuales y de Open Opus: búsqueda local y remota, detalle, edición, eliminación, reutilización para evitar duplicados y enlace opcional de YouTube.
+- Fechas importantes de concurso: título, fecha, hora opcional, notas, edición, eliminación y cuenta atrás.
+- Apple Calendar mediante `EventKitUI` y Apple Reminders mediante `EventKit`; el identificador del recordatorio se conserva para actualizarlo.
+- Persistencia local SwiftData; las operaciones relevantes sobre fechas importantes hacen guardados explícitos.
+- Ajustes → Desarrollo → Exportar IPA: exportación local del `.app` en ejecución a un archivo `.ipa`, probada en iPad. La firma e instalación son pasos distintos.
+- Flujo de desarrollo: Swift Playground ↔ Working Copy ↔ GitHub, con GitHub Actions para type-check. No requiere Mac ni Xcode.
+
+### Compatibilidad y arquitectura
+
+- Objetivo del proyecto: iPadOS 17.6 o posterior.
+- `Package.swift` declara actualmente `.iOS("17.6")`; no existe una discrepancia activa con 18.2.
+- Sin backend, cuentas, iCloud, servidores propios ni sincronización remota de datos.
+- Xcode queda como herramienta opcional para depuración avanzada, Instruments o pruebas complejas. La publicación en App Store requiere Apple Developer Program; si existe membresía, Swift Playground puede enviar a App Store Connect.
+
+### Pendiente
+
+- Revisar el expediente histórico cuando un cambio futuro convierta alguna de sus secciones históricas en fuente de confusión. No reinterpretar los hechos históricos ni borrar contradicciones documentadas.
+
 ---
 
 ## 1. Autoridad y criterios de interpretación
@@ -1910,4 +1935,3 @@ La tarea solo estará terminada cuando:
 - la persistencia se confirme después de cerrar y reabrir;
 - no haya regresiones observadas;
 - el usuario decida si el cambio justifica una nueva versión.
-

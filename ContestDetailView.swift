@@ -353,6 +353,12 @@ struct ContestDetailView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
+
+                if let preparationSummary = phase.preparationSummary {
+                    Text(preparationSummary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(.vertical, 6)
@@ -541,6 +547,10 @@ struct ContestDetailView: View {
         ? "1 obra"
         : "\(count) obras"
         
+        if let preparationSummary = phase.preparationSummary {
+            return "\(phase.name), \(workText), \(preparationSummary)"
+        }
+
         return "\(phase.name), \(workText)"
     }
 }

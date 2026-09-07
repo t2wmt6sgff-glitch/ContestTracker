@@ -8,6 +8,7 @@ struct ContestPhaseDetailView: View {
     
     @State private var showingAddWork = false
     @State private var itemToDecide: ContestRepertoireItem?
+    @State private var saveErrorMessage: String?
     
     private var sortedItems: [ContestRepertoireItem] {
         phase.repertoireItems
@@ -16,6 +17,18 @@ struct ContestPhaseDetailView: View {
     var body: some View {
         List {
             Section("Repertorio") {
+                if let preparationSummary = phase.preparationSummary {
+                    Label(
+                        preparationSummary,
+                        systemImage: "checkmark.circle"
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(
+                        "Preparación de la fase: \(preparationSummary)"
+                    )
+                }
+
                 if sortedItems.isEmpty {
                     ContentUnavailableView(
                         "No hay obras",
@@ -67,6 +80,21 @@ struct ContestPhaseDetailView: View {
                 item: item
             )
         }
+        .alert(
+            "No se pudo guardar el estado",
+            isPresented: Binding(
+                get: { saveErrorMessage != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        saveErrorMessage = nil
+                    }
+                }
+            )
+        ) {
+            Button("Aceptar", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage ?? "Inténtalo de nuevo.")
+        }
     }
     
     // MARK: - Work Row
@@ -93,6 +121,8 @@ struct ContestPhaseDetailView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            preparationMenu(for: item)
         }
         .padding(.vertical, 4)
         .swipeActions(edge: .trailing) {
@@ -100,6 +130,60 @@ struct ContestPhaseDetailView: View {
         }
         .contextMenu {
             removeButton(item)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private func preparationMenu(
+        for item: ContestRepertoireItem
+    ) -> some View {
+        Menu {
+            ForEach(RepertoirePreparationStatus.allCases) { status in
+                Button {
+                    updatePreparationStatus(
+                        status,
+                        for: item
+                    )
+                } label: {
+                    if item.preparationStatus == status {
+                        Label(status.title, systemImage: "checkmark")
+                    } else {
+                        Text(status.title)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text(item.preparationStatus.title)
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+                    .accessibilityHidden(true)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .accessibilityLabel("Estado de preparación")
+        .accessibilityValue(item.preparationStatus.title)
+        .accessibilityHint("Abre un menú para cambiar el estado")
+    }
+
+    private func updatePreparationStatus(
+        _ status: RepertoirePreparationStatus,
+        for item: ContestRepertoireItem
+    ) {
+        let previousStatus = item.preparationStatus
+        guard status != previousStatus else {
+            return
+        }
+
+        item.preparationStatus = status
+
+        do {
+            try modelContext.save()
+        } catch {
+            item.preparationStatus = previousStatus
+            saveErrorMessage =
+                "El cambio no se ha guardado. Inténtalo de nuevo."
         }
     }
     

@@ -10,7 +10,7 @@ import AppleProductTypes
 let package = Package(
     name: "Contest Tracker",
     platforms: [
-        .iOS("18.2")
+        .iOS("17.6")
     ],
     products: [
         .iOSApplication(

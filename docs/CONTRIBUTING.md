@@ -101,7 +101,7 @@ Actualmente el objetivo mínimo es:
 
 No se deben utilizar APIs exclusivas de versiones posteriores cuando exista una alternativa compatible, salvo que exista una justificación clara.
 
-También debe tenerse en cuenta la compatibilidad con las herramientas de desarrollo utilizadas para mantener el proyecto.
+El flujo normal de desarrollo se realiza desde iPad con Swift Playground, Working Copy, GitHub y GitHub Actions. No se debe exigir un Mac ni Xcode para contribuir al flujo habitual. Xcode puede utilizarse opcionalmente para depuración, Instruments o pruebas avanzadas.
 
 ## Dependencias
 
@@ -144,6 +144,19 @@ Las pruebas deberían comprobar tanto el comportamiento inmediato como el compor
 7. Comprobar que los datos siguen presentes.
 
 Las funcionalidades relacionadas con persistencia no deberían considerarse terminadas únicamente porque funcionan mientras la aplicación permanece abierta.
+
+El workflow de GitHub Actions realiza type-check con el SDK de iOS Simulator y el target `arm64-apple-ios17.6-simulator`. Es una comprobación estática: no equivale a un build completo ni sustituye la prueba manual en iPad.
+
+## Flujo de contribución desde iPad
+
+El documento `ContestTracker.swiftpm` utilizado por Swift Playground está enlazado al repositorio mediante Working Copy. Para cambios locales:
+
+1. Edita y guarda en Swift Playground.
+2. Revisa el diff en Working Copy.
+3. Haz commit solo de los archivos revisados.
+4. Haz push a una rama o a la rama acordada.
+
+Para recibir cambios fusionados en GitHub, cierra el proyecto en Swift Playground, haz Pull en Working Copy y vuelve a abrir el mismo documento. No uses Auto-Sync cuando quieras revisar manualmente commits y pushes.
 
 ## Pull Requests
 
